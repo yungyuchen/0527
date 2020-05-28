@@ -8,25 +8,69 @@
       <form>
         <label>ToDoList</label>
         <input v-model="todolist.table" type="text" />
-        <button @click.prevent="addTodolist(todolist.table)">Add ToDoList</button>
+        <button @click.prevent="addTodolist(todolist.table,sort1)">Add ToDoList</button>
+        <button @click.prevent="sort1 = 3">無期限</button>
+        <button @click.prevent="sort1 = 2">次要</button>
+        <button @click.prevent="sort1 = 1">優先</button>
+        <button @click.prevent="sort1 = 0">全部</button>
       </form>
     </div>
     <!-- 下拉存值 -->
     <div id="todolist-table">
       <h1>Vue Select</h1>
 
-      <select class="form-control mr-1">
+      <select v-model="sort">
         <option value disabled selected>--請選擇--</option>
-        <option value="0" @change="filterTodolists(0)">--全部--</option>
-        <option value="1" @change="filterTodolists(1)">--優先--</option>
-        <option value="2" @change="filterTodolists(2)">--次要--</option>
-        <option value="3" @change="filterTodolists(3)">--無期限--</option>
+        <option value="0">--全部--</option>
+        <option value="1">--優先--</option>
+        <option value="2">--次要--</option>
+        <option value="3">--無期限--</option>
       </select>
+      <div>sort = {{ sort }}</div>
 
-      <button @click="filterTodolists(0)">全部</button>
-      <button @click="filterTodolists(1)">優先</button>
-      <button @click="filterTodolists(2)">次要</button>
-      <button @click="filterTodolists(3)">無期限</button>
+      <div>
+        <button @click="sort = 3">無期限</button>
+        <button @click="sort = 2">次要</button>
+        <button @click="sort = 1">優先</button>
+        <button @click="sort = 0">全部</button>
+      </div>
+
+      <p v-if="todolists.length < 1" class="empty-table">No ToDoList</p>
+      <div v-else>
+        <h5>ToDoList</h5>
+        <div v-for="todolist in todolists" :key="todolist.id">
+          <div class="tab-content" v-if="sort == 0">
+            <div v-if="todolist.sort !== sort">
+              <div class="tab-text" v-if="editing === todolist.id">
+                <input type="text" v-model="todolist.table" />
+              </div>
+              <div class="tab-text" v-else>{{ todolist.table }}</div>
+              <div class="tab-button" v-if="editing === todolist.id">
+                <button @click="editTodolists(todolist.id,todolist.table)">Save</button>
+                <button class="muted-button" @click="editing = null">Cancel</button>
+              </div>
+              <div class="tab-button" v-else>
+                <button @click="editMode(todolist.id,todolist.sort)">Edit</button>
+                <button @click="deleteTodolists(todolist.id)">Delete</button>
+              </div>
+            </div>
+          </div>
+          <div class="tab-content" v-if="todolist.sort === sort">
+            <div class="tab-text" v-if="editing === todolist.id">
+              <input type="text" v-model="todolist.table" />
+            </div>
+            <div class="tab-text" v-else>{{ todolist.table }}</div>
+            <div class="tab-button" v-if="editing === todolist.id">
+              <button @click="editTodolists(todolist.id,todolist.table)">Save</button>
+              <button class="muted-button" @click="editing = null">Cancel</button>
+            </div>
+            <div class="tab-button" v-else>
+              <button @click="editMode(todolist.id,todolist.sort)">Edit</button>
+              <button @click="deleteTodolists(todolist.id)">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <p v-if="todolists.length < 1" class="empty-table">No ToDoList</p>
       <table v-else>
@@ -63,13 +107,7 @@ export default {
   components: {},
   data() {
     return {
-      newtodolist: [
-        {
-          id: "",
-          sort: "", // 1 優先 2 次要 3 無限期
-          table: ""
-        }
-      ],
+      sort: 0,
       todolist: {
         table: "" //使用者新輸入的事項
       },
@@ -77,17 +115,17 @@ export default {
         //存取每一筆事項的空陣列
         {
           id: 1,
-          sort: 2, // 1 優先 2 次要 3 無限期
+          sort: 3, // 1 優先 2 次要 3 無限期
           table: "熟悉Git指令"
         },
         {
           id: 2,
-          sort: 1,
+          sort: 2, // 1 優先 2 次要 3 無限期
           table: "安裝Vue建置環境"
         },
         {
           id: 3,
-          sort: 3,
+          sort: 1, // 1 優先 2 次要 3 無限期
           table: "整理技術筆記"
         }
       ],
@@ -97,8 +135,6 @@ export default {
   created() {
     // vue 生命週期
     this.todolists = JSON.parse(localStorage.getItem("todolists"));
-    // this.todolists = this.newtodolist;
-    // this.todolists=  this.ne
   },
 
   methods: {
@@ -106,20 +142,21 @@ export default {
       this.editing = id;
     },
 
-    addTodolist(todolist) {
+    addTodolist(todolist, sort) {
       console.log("addTodolist = ");
       const lastId =
         this.todolists.length > 0
           ? this.todolists[this.todolists.length - 1].id
           : 0; // 判斷原有的 todolists 是否有資料, 有 取得最後一個ID , 無 則等於0
       const id = lastId + 1; // 定義一個ID變數取 新字串的ID
-      this.todolists.push({ id: id, table: todolist });
+      this.todolists.push({ id: id, sort: sort, table: todolist });
       localStorage.setItem("todolists", JSON.stringify(this.todolists));
       this.todolist.table = "";
     },
 
     deleteTodolists(id) {
       this.todolists = this.todolists.filter(function(todolist) {
+        console.log("todolist.id +" + todolist.id);
         return todolist.id !== id;
       });
       localStorage.setItem("todolists", JSON.stringify(this.todolists));
@@ -128,21 +165,22 @@ export default {
     editTodolists(id, updatedTodolist) {
       // console.log("id = " + id); // 1 2 3
       // const abcid = this.todolists[id].table;
-      for (let index = 0; index < this.todolists.length; index++) {// 0 1 2
-        if (this.todolists[index].id === id) { // 1
-          console.log("this.todolists[index].table = " + this.todolists[index].table); // 熟悉Git指令
-          console.log("updatedTodolist = " + updatedTodolist); // 熟悉Git指令111
-           this.todolists[index].table == updatedTodolist;
+      for (let index = 0; index < this.todolists.length; index++) {
+        if (this.todolists[index].id === id) {
+          console.log(
+            "this.todolists[index].table = " + this.todolists[index].table
+          ); 
+          this.todolists[index].table == updatedTodolist;
         }
       }
       this.editing = null;
       localStorage.setItem("todolists", JSON.stringify(this.todolists));
-      
+
       // this.todolists.push({ id: id, table: updatedTodolist });
 
       // console.log(" this.todolists[id].table = " + abcid); // 1 2 3
       // if (this.todolists.id === id) {
-        // this.todolists[id].table == updatedTodolist;
+      // this.todolists[id].table == updatedTodolist;
       // }
       //   if (updatedTodolist === "") return; // 防呆 對話視窗
       //   this.todolists = (id, updatedTodolist);
@@ -165,7 +203,7 @@ export default {
       //   console.log("updatedTodolist = " + updatedTodolist); // object array 物件
       //   console.log("todolist = " + todolist.table); // object  array 物件
       //   // if (todolist.id === id) {
-          
+
       //   // }
       //   return todolist.id == id ? updatedTodolist : todolist.table; // 判斷 todolist.id === id 則等於 updatedTodolist 否則為 原本的 todolist
       // });
@@ -174,16 +212,25 @@ export default {
 
     filterTodolists(sort) {
       console.log("sort +" + sort);
-      if (sort === 0) {
-        this.todolists = this.todolists.filter(function(todolist) {
-          return todolist.sort !== sort;
-        });
-      } else {
-        this.todolists = this.todolists.filter(function(todolist) {
-          return todolist.sort == sort;
-        });
-      }
+
+      this.todolists = this.todolists.filter(function(todolist) {
+        console.log("todolist.sort +" + todolist.sort);
+        return this.todolist.sort === sort;
+      });
+
+      // if (sort === 0) {
+      //   this.todolists = this.todolists.filter(function(todolist) {
+      //     return todolist.sort != sort;
+      //   });
+      // } else {
+      //   console.log("sort +" + sort);
+      //   this.todolists = this.todolists.filter(function(todolist) {
+      //     console.log("todolist.sort +" + todolist.sort);
+      //     return todolist.sort == sort;
+      //   });
+      // }
     }
+
     // printValue(val) {
     //   alert("Functions parameter: " + val);
     //   alert("Binding value before tick: " + this.value);
@@ -196,17 +243,44 @@ export default {
 </script>
 
 <style>
+/* 添加了一些全局樣式 */
 form {
   margin-bottom: 2rem;
 }
-
-button {
-  margin: 0 0.5rem 0 0;
-  float: right;
+select {
+    line-height: 22px;
 }
 
-/* 添加了一些全局樣式 */
+h5 {
+  border-bottom: 1px solid #dedede;
+  margin: 60px 0 0 0;
+}
+
+.tab-content {
+  display: inline-block;
+  width: 100%;
+  border-bottom: 1px solid #dedede;
+  padding: 0.5rem;
+  vertical-align: middle;
+}
+
+.tab-text {
+  display: inline-block;
+  width: 70%;
+  vertical-align: middle;
+  margin: -6px;
+}
+
+.tab-button {
+  display: inline-block;
+  width: 30%;
+  min-width: 200px;
+  vertical-align: middle;
+}
+
 button {
+  margin: 0 0 0 0.5rem;
+  float: right;
   background: #009435;
   border: 1px solid #009435;
 }
