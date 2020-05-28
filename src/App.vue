@@ -3,8 +3,6 @@
     <h1>ToDoList</h1>
 
     <div id="todolist-form">
-      <!-- <form v-on:submit="todolistSubmit"> -->
-      <!-- <form v-on:click="todolistSubmit"> -->
       <form>
         <label>ToDoList Form</label>
         <input v-model="todolist.table" type="text" />
@@ -15,18 +13,7 @@
         <button @click.prevent="sort1 = 0">全部</button>
       </form>
     </div>
-    <!-- 下拉存值 -->
     <div id="todolist-table">
-      <!-- <h1>Vue Select</h1>
-      <select v-model="sort">
-        <option value disabled selected>--請選擇--</option>
-        <option value="0">--全部--</option>
-        <option value="1">--優先--</option>
-        <option value="2">--次要--</option>
-        <option value="3">--無期限--</option>
-      </select>
-      <div>sort = {{ sort }}</div> -->
-
       <div>
         <h2>Todolist Select</h2>
         <button @click="sort = 3">無期限</button>
@@ -34,7 +21,6 @@
         <button @click="sort = 1">優先</button>
         <button @click="sort = 0">全部</button>
       </div>
-
       <p v-if="todolists.length < 1" class="empty-table">No ToDoList</p>
       <div v-else>
         <h5>Todolist Table</h5>
@@ -71,7 +57,6 @@
           </div>
         </div>
       </div>
-
     </div>
   </div>
 </template>
